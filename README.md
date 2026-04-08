@@ -16,7 +16,7 @@ npm run dev
 
 ## Deploy to GitHub Pages
 
-This project is configured for the repository name `kindred-calender`.
+This project is configured for the repository name `Calender`.
 
 ### 1. One-time setup
 
@@ -34,7 +34,7 @@ git init
 git add .
 git commit -m "Initial commit"
 git branch -M main
-git remote add origin https://github.com/<your-username>/kindred-calender.git
+git remote add origin https://github.com/Vedulaudayeaswar/Calender.git
 git push -u origin main
 ```
 
@@ -65,7 +65,7 @@ In your GitHub repository settings:
 
 Your live URL will be:
 
-`https://<your-username>.github.io/kindred-calender/`
+`https://Vedulaudayeaswar.github.io/Calender/`
 
 ## Notes
 
