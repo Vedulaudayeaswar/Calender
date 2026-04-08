@@ -69,5 +69,32 @@ Your live URL will be:
 
 ## Notes
 
-- If your repository name changes, update `base` in `vite.config.ts`.
+- `npm run build` now generates output for root hosting (`/`) which is ideal for Render.
+- `npm run deploy` builds in `gh-pages` mode and publishes with `/Calender/` base path.
 - If `npm run deploy` fails first time, run `npm install` again and retry.
+
+## Deploy to Render (Static Site)
+
+Render works well for this project.
+
+### 1. Push latest code to GitHub
+
+```bash
+git add .
+git commit -m "Prepare Render deployment"
+git push
+```
+
+### 2. Create a Static Site in Render
+
+1. Open Render Dashboard -> New -> Static Site
+2. Connect repository: `Vedulaudayeaswar/Calender`
+3. Use these settings:
+   - Build Command: `npm install && npm run build`
+   - Publish Directory: `dist`
+
+### 3. Deploy
+
+Click Create Static Site. Render gives you a live URL like:
+
+`https://your-app-name.onrender.com`
