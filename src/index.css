@@ -41,7 +41,7 @@
     --calendar-today: 200 60% 50%;
     --calendar-outside: 30 8% 70%;
     --calendar-holiday: 0 70% 55%;
-    --calendar-shadow: 0 8px 32px -8px hsl(30 15% 30% / 0.12);
+    --calendar-shadow: 0 20px 60px -15px hsl(30 15% 20% / 0.2), 0 8px 20px -8px hsl(30 15% 30% / 0.1);
     --calendar-paper: 42 30% 97%;
 
     --font-display: 'Playfair Display', Georgia, serif;
@@ -80,4 +80,16 @@
   .font-body {
     font-family: var(--font-body);
   }
+}
+
+/* Scrollbar styling for notes */
+.overflow-y-auto::-webkit-scrollbar {
+  width: 4px;
+}
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: transparent;
+}
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 4px;
 }
