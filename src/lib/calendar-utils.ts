@@ -26,7 +26,7 @@ import october from "@/assets/months/october.jpg";
 import november from "@/assets/months/november.jpg";
 import december from "@/assets/months/december.jpg";
 
-export const MONTH_IMAGES: Record<number, string> = {
+export const SEASONAL_MONTH_IMAGES: Record<number, string> = {
   0: january,
   1: february,
   2: march,

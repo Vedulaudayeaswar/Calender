@@ -1,5 +1,14 @@
 import { useState, useCallback, useEffect } from "react";
-import { addMonths, subMonths, format } from "date-fns";
+import {
+  addMonths,
+  subMonths,
+  addYears,
+  subYears,
+  format,
+  setMonth,
+} from "date-fns";
+
+export type CalendarView = "month" | "year";
 
 export interface Note {
   id: string;
@@ -30,6 +39,9 @@ export function useCalendar() {
   const [isSelecting, setIsSelecting] = useState(false);
   const [allNotes, setAllNotes] = useState<Record<string, Note[]>>(loadNotes);
   const [direction, setDirection] = useState(0);
+  const [view, setView] = useState<CalendarView>("month");
+  const [transitionProgress, setTransitionProgress] = useState(0);
+  const [showYearTransition, setShowYearTransition] = useState(false);
 
   const monthKey = format(currentDate, "yyyy-MM");
 
@@ -41,19 +53,43 @@ export function useCalendar() {
 
   const goNext = useCallback(() => {
     setDirection(1);
-    setCurrentDate((d) => addMonths(d, 1));
+    if (view === "month") {
+      setTransitionProgress(1);
+      setTimeout(() => {
+        setCurrentDate((d) => addMonths(d, 1));
+        setTransitionProgress(0);
+      }, 500);
+    } else {
+      setShowYearTransition(true);
+      setTimeout(() => {
+        setCurrentDate((d) => addYears(d, 1));
+        setShowYearTransition(false);
+      }, 8000);
+    }
     setRangeStart(null);
     setRangeEnd(null);
     setIsSelecting(false);
-  }, []);
+  }, [view]);
 
   const goPrev = useCallback(() => {
     setDirection(-1);
-    setCurrentDate((d) => subMonths(d, 1));
+    if (view === "month") {
+      setTransitionProgress(1);
+      setTimeout(() => {
+        setCurrentDate((d) => subMonths(d, 1));
+        setTransitionProgress(0);
+      }, 500);
+    } else {
+      setShowYearTransition(true);
+      setTimeout(() => {
+        setCurrentDate((d) => subYears(d, 1));
+        setShowYearTransition(false);
+      }, 8000);
+    }
     setRangeStart(null);
     setRangeEnd(null);
     setIsSelecting(false);
-  }, []);
+  }, [view]);
 
   const goToday = useCallback(() => {
     setDirection(0);
@@ -61,6 +97,12 @@ export function useCalendar() {
     setRangeStart(null);
     setRangeEnd(null);
     setIsSelecting(false);
+  }, []);
+
+  const selectMonth = useCallback((monthIndex: number) => {
+    setDirection(0);
+    setCurrentDate((d) => setMonth(d, monthIndex));
+    setView("month");
   }, []);
 
   const handleDayClick = useCallback(
@@ -74,16 +116,19 @@ export function useCalendar() {
         setIsSelecting(false);
       }
     },
-    [isSelecting]
+    [isSelecting],
   );
 
   const handleDayHover = useCallback(
     (day: Date) => {
       if (isSelecting && rangeStart) {
-        setRangeEnd(day);
+        // Only update if the day has actually changed to prevent excessive re-renders
+        if (!rangeEnd || day.getTime() !== rangeEnd.getTime()) {
+          setRangeEnd(day);
+        }
       }
     },
-    [isSelecting, rangeStart]
+    [isSelecting, rangeStart, rangeEnd],
   );
 
   const addNote = useCallback(
@@ -92,14 +137,14 @@ export function useCalendar() {
         rangeStart && rangeEnd
           ? `${format(
               rangeStart < rangeEnd ? rangeStart : rangeEnd,
-              "MMM d"
+              "MMM d",
             )} – ${format(
               rangeStart < rangeEnd ? rangeEnd : rangeStart,
-              "MMM d"
+              "MMM d",
             )}`
           : rangeStart
-          ? format(rangeStart, "MMM d")
-          : "General";
+            ? format(rangeStart, "MMM d")
+            : "General";
 
       const note: Note = {
         id: crypto.randomUUID(),
@@ -113,7 +158,7 @@ export function useCalendar() {
         [monthKey]: [...(prev[monthKey] || []), note],
       }));
     },
-    [monthKey, rangeStart, rangeEnd]
+    [monthKey, rangeStart, rangeEnd],
   );
 
   const deleteNote = useCallback(
@@ -123,7 +168,7 @@ export function useCalendar() {
         [monthKey]: (prev[monthKey] || []).filter((n) => n.id !== id),
       }));
     },
-    [monthKey]
+    [monthKey],
   );
 
   const clearRange = useCallback(() => {
@@ -139,9 +184,14 @@ export function useCalendar() {
     isSelecting,
     notes,
     direction,
+    view,
+    setView,
+    transitionProgress,
+    showYearTransition,
     goNext,
     goPrev,
     goToday,
+    selectMonth,
     handleDayClick,
     handleDayHover,
     addNote,

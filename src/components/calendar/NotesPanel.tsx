@@ -35,60 +35,69 @@ export function NotesPanel({
     rangeStart && rangeEnd
       ? `${format(
           rangeStart < rangeEnd ? rangeStart : rangeEnd,
-          "MMM d"
-        )} – ${format(
-          rangeStart < rangeEnd ? rangeEnd : rangeStart,
-          "MMM d"
-        )}`
+          "MMM d",
+        )} – ${format(rangeStart < rangeEnd ? rangeEnd : rangeStart, "MMM d")}`
       : rangeStart
-      ? format(rangeStart, "MMM d")
-      : null;
+        ? format(rangeStart, "MMM d")
+        : null;
 
   return (
     <motion.div
-      className="border-t border-border bg-calendar-paper p-4 lg:border-l lg:border-t-0 lg:p-6"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.3, duration: 0.5 }}
+      className="bg-white/10 backdrop-blur-sm p-8 h-full flex flex-col border-t border-white/15"
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: 0.3, duration: 0.6 }}
+      style={{ perspective: "1000px" }}
     >
       {/* Header */}
-      <div className="mb-4 flex items-center gap-2">
+      <div className="mb-8 flex items-center gap-4">
         <motion.div
-          whileHover={{ rotate: 15, scale: 1.1 }}
-          transition={{ type: "spring", stiffness: 300 }}
+          animate={{
+            rotateY: [0, 360],
+          }}
+          transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
         >
-          <StickyNote className="h-4 w-4 text-primary" />
+          <StickyNote className="h-6 w-6 text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]" />
         </motion.div>
-        <h2 className="font-display text-lg font-semibold text-foreground">
+        <h2 className="font-display text-2xl font-black tracking-tight text-white">
           Notes
         </h2>
-        <span className="ml-1 rounded-full bg-secondary px-2 py-0.5 font-body text-xs text-muted-foreground">
+        <motion.span
+          key={notes.length}
+          initial={{ scale: 1.5, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="ml-auto rounded-xl bg-white/20 px-4 py-1.5 font-body text-xs font-black text-white border border-white/30"
+        >
           {notes.length}
-        </span>
+        </motion.span>
       </div>
 
       {/* Selected range indicator */}
       <AnimatePresence>
         {rangeLabel && (
           <motion.div
-            initial={{ height: 0, opacity: 0, rotateX: -30 }}
-            animate={{ height: "auto", opacity: 1, rotateX: 0 }}
-            exit={{ height: 0, opacity: 0, rotateX: 30 }}
-            transition={{ duration: 0.3 }}
-            className="mb-3 overflow-hidden"
-            style={{ perspective: "600px" }}
+            initial={{ height: 0, opacity: 0, y: -20 }}
+            animate={{ height: "auto", opacity: 1, y: 0 }}
+            exit={{ height: 0, opacity: 0, y: -20 }}
+            className="mb-6"
           >
-            <div className="flex items-center gap-2 rounded-lg bg-calendar-range-bg px-3 py-2">
-              <CalendarDays className="h-3.5 w-3.5 text-primary" />
-              <span className="font-body text-sm font-medium text-foreground">
+            <div className="flex items-center gap-4 rounded-2xl bg-white/15 border border-white/20 px-5 py-4 shadow-2xl backdrop-blur-sm">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-primary shadow-xl">
+                <CalendarDays className="h-5 w-5" />
+              </div>
+              <span className="font-body text-sm font-black text-white">
                 {rangeLabel}
               </span>
               <motion.button
                 onClick={onClearRange}
-                whileHover={{ scale: 1.2, rotate: 90 }}
-                className="ml-auto text-muted-foreground hover:text-foreground"
+                whileHover={{
+                  scale: 1.2,
+                  rotate: 180,
+                  backgroundColor: "rgba(255,255,255,0.2)",
+                }}
+                className="ml-auto flex h-8 w-8 items-center justify-center rounded-xl text-white/60 transition-all hover:text-white"
               >
-                <X className="h-3.5 w-3.5" />
+                <X className="h-5 w-5" />
               </motion.button>
             </div>
           </motion.div>
@@ -96,69 +105,79 @@ export function NotesPanel({
       </AnimatePresence>
 
       {/* Add note form */}
-      <form onSubmit={handleSubmit} className="mb-4 flex gap-2">
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder={rangeLabel ? `Note for ${rangeLabel}...` : "Add a note..."}
-          className="flex-1 rounded-lg border border-border bg-card px-3 py-2 font-body text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 transition-shadow"
-        />
+      <form onSubmit={handleSubmit} className="mb-8 flex gap-3">
+        <div className="relative flex-1 group">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder={
+              rangeLabel ? `Note for ${rangeLabel}...` : "Add a note..."
+            }
+            className="w-full rounded-2xl border border-white/12 bg-white/10 px-5 py-4 font-body text-sm text-white placeholder:text-white/35 focus:outline-none focus:ring-2 focus:ring-white/20 transition-all group-hover:border-white/20"
+          />
+        </div>
         <motion.button
           type="submit"
           disabled={!input.trim()}
           whileHover={{ scale: 1.1, rotateZ: 90 }}
           whileTap={{ scale: 0.9 }}
           className={cn(
-            "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-opacity",
-            !input.trim() && "opacity-40"
+            "flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white text-primary shadow-2xl transition-all",
+            !input.trim() && "opacity-20 grayscale pointer-events-none",
           )}
         >
-          <Plus className="h-4 w-4" />
+          <Plus className="h-6 w-6" />
         </motion.button>
       </form>
 
       {/* Notes list */}
-      <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
+      <div className="space-y-4 flex-1 overflow-y-auto pr-3 custom-scrollbar">
         <AnimatePresence mode="popLayout">
           {notes.length === 0 && (
-            <motion.p
+            <motion.div
               key="empty"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="py-6 text-center font-body text-sm text-muted-foreground"
+              className="flex flex-col items-center justify-center py-20 text-center opacity-40"
             >
-              No notes yet. Select a date range and add one!
-            </motion.p>
+              <StickyNote className="h-12 w-12 text-white mb-4" />
+              <p className="font-body text-sm font-bold text-white tracking-widest uppercase">
+                Empty Space
+              </p>
+            </motion.div>
           )}
           {notes.map((note, i) => (
             <motion.div
               key={note.id}
               layout
-              initial={{ opacity: 0, x: -30, rotateY: -20, scale: 0.9 }}
-              animate={{ opacity: 1, x: 0, rotateY: 0, scale: 1 }}
-              exit={{ opacity: 0, x: 30, rotateY: 20, scale: 0.9 }}
-              transition={{ duration: 0.35, delay: i * 0.05 }}
+              initial={{ opacity: 0, x: -50 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 50, scale: 0.8 }}
+              transition={{ delay: i * 0.05 }}
               whileHover={{
                 scale: 1.02,
-                x: 4,
-                boxShadow: "0 4px 20px -4px rgba(0,0,0,0.1)",
+                backgroundColor: "rgba(255, 255, 255, 0.1)",
               }}
-              className="group flex items-start gap-3 rounded-lg border border-border/50 bg-card p-3 transition-colors hover:border-border cursor-default"
-              style={{ perspective: "600px", transformStyle: "preserve-3d" }}
+              className="group flex items-start gap-5 rounded-2xl border border-white/8 bg-white/8 p-5 transition-all hover:border-white/20"
             >
               <div className="min-w-0 flex-1">
-                <p className="font-body text-sm text-foreground">{note.text}</p>
-                <p className="mt-1 font-body text-xs text-muted-foreground">
-                  {note.rangeLabel}
+                <p className="font-body text-sm font-medium leading-relaxed text-white">
+                  {note.text}
                 </p>
+                <div className="mt-3 flex items-center gap-2 text-white/40">
+                  <CalendarDays className="h-3.5 w-3.5" />
+                  <p className="font-body text-[10px] font-black uppercase tracking-[0.2em]">
+                    {note.rangeLabel}
+                  </p>
+                </div>
               </div>
               <motion.button
                 onClick={() => onDelete(note.id)}
-                whileHover={{ scale: 1.3, rotate: -10 }}
-                className="shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-destructive"
+                whileHover={{ scale: 1.3, color: "#ff4444" }}
+                className="shrink-0 flex h-10 w-10 items-center justify-center rounded-xl text-white/20 opacity-0 group-hover:opacity-100 transition-all hover:bg-white/10"
               >
-                <Trash2 className="h-3.5 w-3.5" />
+                <Trash2 className="h-4 w-4" />
               </motion.button>
             </motion.div>
           ))}

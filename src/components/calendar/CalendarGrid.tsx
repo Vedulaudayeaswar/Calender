@@ -1,3 +1,4 @@
+import React, { memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import {
@@ -9,6 +10,7 @@ import {
   isRangeEnd,
   getHoliday,
   format,
+  isSameDay,
 } from "@/lib/calendar-utils";
 
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -20,47 +22,164 @@ interface CalendarGridProps {
   direction: number;
   onDayClick: (day: Date) => void;
   onDayHover: (day: Date) => void;
+  selectedDayRef: React.RefObject<HTMLButtonElement>;
 }
 
 const gridVariants = {
   enter: (dir: number) => ({
-    rotateX: dir > 0 ? 15 : -15,
-    y: dir > 0 ? 40 : -40,
+    rotateX: dir > 0 ? 30 : -30,
+    rotateY: dir > 0 ? 10 : -10,
+    y: dir > 0 ? 60 : -60,
     opacity: 0,
-    scale: 0.95,
+    scale: 0.8,
   }),
   center: {
     rotateX: 0,
+    rotateY: 0,
     y: 0,
     opacity: 1,
     scale: 1,
     transition: {
-      duration: 0.5,
-      ease: [0.16, 1, 0.3, 1],
-      staggerChildren: 0.012,
+      duration: 0.7,
+      type: "spring",
+      stiffness: 100,
+      damping: 20,
+      staggerChildren: 0.015,
       delayChildren: 0.1,
     },
   },
   exit: (dir: number) => ({
-    rotateX: dir > 0 ? -15 : 15,
-    y: dir > 0 ? -30 : 30,
+    rotateX: dir > 0 ? -30 : 30,
+    rotateY: dir > 0 ? -10 : 10,
+    y: dir > 0 ? -50 : 50,
     opacity: 0,
-    scale: 0.95,
-    transition: { duration: 0.3 },
+    scale: 0.8,
+    transition: { duration: 0.4 },
   }),
 };
 
 const dayVariants = {
-  enter: { opacity: 0, scale: 0.6, rotateY: 90, z: -50 },
+  enter: { opacity: 0, scale: 0.5, rotateY: 120, z: -100 },
   center: {
     opacity: 1,
     scale: 1,
     rotateY: 0,
     z: 0,
-    transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] },
+    transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] },
   },
-  exit: { opacity: 0, scale: 0.6, transition: { duration: 0.15 } },
+  exit: {
+    opacity: 0,
+    scale: 0.5,
+    rotateY: -120,
+    transition: { duration: 0.2 },
+  },
 };
+
+interface CalendarDayProps {
+  day: Date;
+  inMonth: boolean;
+  today: boolean;
+  inRange: boolean;
+  isStart: boolean;
+  isEnd: boolean;
+  holiday: string | undefined;
+  onClick: (day: Date) => void;
+  onHover: (day: Date) => void;
+  isTarget: boolean;
+  targetRef: React.RefObject<HTMLButtonElement>;
+}
+
+const CalendarDay = memo(
+  ({
+    day,
+    inMonth,
+    today,
+    inRange,
+    isStart,
+    isEnd,
+    holiday,
+    onClick,
+    onHover,
+    isTarget,
+    targetRef,
+  }: CalendarDayProps) => {
+    return (
+      <motion.button
+        ref={isTarget ? targetRef : null}
+        variants={dayVariants}
+        onClick={() => onClick(day)}
+        onMouseEnter={() => onHover(day)}
+        whileHover={{
+          scale: 1.1,
+          z: 40,
+          backgroundColor: "rgba(255, 255, 255, 0.2)",
+          transition: { duration: 0.15 },
+        }}
+        whileTap={{ scale: 0.95, z: 10 }}
+        className={cn(
+          "group relative flex aspect-square w-full items-center justify-center rounded-2xl font-body text-sm transition-all duration-300",
+          !inMonth && "text-white/22",
+          inMonth && "text-white/90",
+          today &&
+            !isStart &&
+            !isEnd &&
+            "font-black text-white bg-white/35 shadow-[0_0_20px_rgba(255,255,255,0.35)]",
+          inRange &&
+            !isStart &&
+            !isEnd &&
+            "rounded-none bg-white/12 backdrop-blur-sm",
+          isStart &&
+            "rounded-l-2xl rounded-r-none bg-white text-primary shadow-2xl z-10",
+          isEnd &&
+            "rounded-l-none rounded-r-2xl bg-white text-primary shadow-2xl z-10",
+          isStart && isEnd && "rounded-2xl",
+          holiday &&
+            inMonth &&
+            "font-bold text-white underline decoration-white/40 underline-offset-4",
+        )}
+        style={{
+          transformStyle: "preserve-3d",
+          willChange: "transform, opacity",
+          backfaceVisibility: "hidden",
+          WebkitBackfaceVisibility: "hidden",
+        }}
+        title={holiday || format(day, "EEEE, MMMM d, yyyy")}
+      >
+        <span
+          style={{ transform: "translateZ(20px)" }}
+          className="relative z-20 pointer-events-none"
+        >
+          {format(day, "d")}
+        </span>
+
+        {/* Glass Background */}
+        <div className="absolute inset-0 rounded-2xl bg-white/8 border border-white/12 group-hover:border-white/30 transition-all duration-300 shadow-inner" />
+
+        {holiday && inMonth && (
+          <motion.span
+            className="absolute top-2 right-2 h-1.5 w-1.5 rounded-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.8)]"
+            animate={{ scale: [1, 1.5, 1], opacity: [0.6, 1, 0.6] }}
+            transition={{ duration: 2, repeat: Infinity }}
+            style={{ transform: "translateZ(25px)" }}
+          />
+        )}
+      </motion.button>
+    );
+  },
+  (prev, next) => {
+    return (
+      prev.day.getTime() === next.day.getTime() &&
+      prev.inMonth === next.inMonth &&
+      prev.today === next.today &&
+      prev.inRange === next.inRange &&
+      prev.isStart === next.isStart &&
+      prev.isEnd === next.isEnd &&
+      prev.holiday === next.holiday
+    );
+  },
+);
+
+CalendarDay.displayName = "CalendarDay";
 
 export function CalendarGrid({
   currentDate,
@@ -69,21 +188,25 @@ export function CalendarGrid({
   direction,
   onDayClick,
   onDayHover,
+  selectedDayRef,
 }: CalendarGridProps) {
   const days = getCalendarDays(currentDate);
   const key = format(currentDate, "yyyy-MM");
 
   return (
-    <div className="p-4 lg:p-6" style={{ perspective: "800px" }}>
+    <div className="p-4 lg:p-6" style={{ perspective: "1000px" }}>
       {/* Weekday headers */}
-      <div className="mb-2 grid grid-cols-7 gap-1">
-        {WEEKDAYS.map((day) => (
-          <div
+      <div className="mb-4 grid grid-cols-7 gap-1">
+        {WEEKDAYS.map((day, idx) => (
+          <motion.div
             key={day}
-            className="py-2 text-center font-body text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: idx * 0.03 }}
+            className="py-2 text-center font-body text-[10px] font-bold uppercase tracking-widest text-white/55"
           >
             {day}
-          </div>
+          </motion.div>
         ))}
       </div>
 
@@ -96,7 +219,7 @@ export function CalendarGrid({
           initial="enter"
           animate="center"
           exit="exit"
-          className="grid grid-cols-7 gap-1"
+          className="grid grid-cols-7 gap-1.5"
           style={{ transformStyle: "preserve-3d" }}
         >
           {days.map((day) => {
@@ -106,61 +229,24 @@ export function CalendarGrid({
             const isStart = isRangeStart(day, rangeStart, rangeEnd);
             const isEnd = isRangeEnd(day, rangeStart, rangeEnd);
             const holiday = getHoliday(day);
+            const isTarget =
+              isStart || (rangeStart && isSameDay(day, rangeStart));
 
             return (
-              <motion.button
+              <CalendarDay
                 key={day.toISOString()}
-                variants={dayVariants}
-                onClick={() => onDayClick(day)}
-                onMouseEnter={() => onDayHover(day)}
-                whileHover={{
-                  scale: 1.2,
-                  z: 30,
-                  rotateX: -5,
-                  boxShadow: "0 8px 25px -5px rgba(0,0,0,0.15)",
-                  transition: { duration: 0.2, ease: "easeOut" },
-                }}
-                whileTap={{ scale: 0.9 }}
-                className={cn(
-                  "group relative flex h-10 w-full items-center justify-center rounded-lg font-body text-sm transition-colors duration-150 lg:h-12",
-                  !inMonth && "text-calendar-outside",
-                  inMonth && "text-foreground",
-                  today &&
-                    !isStart &&
-                    !isEnd &&
-                    "font-bold text-calendar-today ring-2 ring-calendar-today/30",
-                  inRange &&
-                    !isStart &&
-                    !isEnd &&
-                    "rounded-none bg-calendar-range-bg",
-                  isStart &&
-                    "rounded-l-lg rounded-r-none bg-primary text-primary-foreground shadow-lg shadow-primary/30",
-                  isEnd &&
-                    "rounded-l-none rounded-r-lg bg-primary text-primary-foreground shadow-lg shadow-primary/30",
-                  isStart && isEnd && "rounded-lg",
-                  holiday && inMonth && "font-medium"
-                )}
-                style={{ transformStyle: "preserve-3d" }}
-                title={holiday || format(day, "EEEE, MMMM d, yyyy")}
-              >
-                <span style={{ transform: "translateZ(2px)" }}>
-                  {format(day, "d")}
-                </span>
-                {holiday && inMonth && (
-                  <motion.span
-                    className="absolute -top-0.5 right-0.5 h-2 w-2 rounded-full bg-calendar-holiday"
-                    animate={{ scale: [1, 1.3, 1] }}
-                    transition={{ duration: 2, repeat: Infinity, repeatType: "loop" }}
-                  />
-                )}
-                {today && !isStart && !isEnd && (
-                  <motion.span
-                    className="absolute inset-0 rounded-lg ring-2 ring-calendar-today/20"
-                    animate={{ scale: [1, 1.05, 1], opacity: [0.5, 1, 0.5] }}
-                    transition={{ duration: 3, repeat: Infinity }}
-                  />
-                )}
-              </motion.button>
+                day={day}
+                inMonth={inMonth}
+                today={today}
+                inRange={inRange}
+                isStart={isStart}
+                isEnd={isEnd}
+                holiday={holiday}
+                onClick={onDayClick}
+                onHover={onDayHover}
+                isTarget={!!isTarget}
+                targetRef={selectedDayRef}
+              />
             );
           })}
         </motion.div>
