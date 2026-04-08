@@ -4,6 +4,7 @@ import {
   subMonths,
   addYears,
   subYears,
+  addDays,
   format,
   setMonth,
 } from "date-fns";
@@ -14,6 +15,7 @@ export interface Note {
   id: string;
   text: string;
   rangeLabel: string;
+  dateKeys?: string[];
   createdAt: string;
 }
 
@@ -146,10 +148,27 @@ export function useCalendar() {
             ? format(rangeStart, "MMM d")
             : "General";
 
+      const dateKeys: string[] = [];
+      if (rangeStart && rangeEnd) {
+        const start = rangeStart < rangeEnd ? rangeStart : rangeEnd;
+        const end = rangeStart < rangeEnd ? rangeEnd : rangeStart;
+        const days = Math.min(
+          366,
+          Math.floor((end.getTime() - start.getTime()) / 86400000) + 1,
+        );
+
+        for (let i = 0; i < days; i++) {
+          dateKeys.push(format(addDays(start, i), "yyyy-MM-dd"));
+        }
+      } else if (rangeStart) {
+        dateKeys.push(format(rangeStart, "yyyy-MM-dd"));
+      }
+
       const note: Note = {
         id: crypto.randomUUID(),
         text,
         rangeLabel,
+        dateKeys,
         createdAt: new Date().toISOString(),
       };
 

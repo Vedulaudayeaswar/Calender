@@ -19,6 +19,7 @@ interface CalendarGridProps {
   currentDate: Date;
   rangeStart: Date | null;
   rangeEnd: Date | null;
+  notedDateKeys: Set<string>;
   direction: number;
   onDayClick: (day: Date) => void;
   onDayHover: (day: Date) => void;
@@ -82,6 +83,7 @@ interface CalendarDayProps {
   inRange: boolean;
   isStart: boolean;
   isEnd: boolean;
+  hasNote: boolean;
   holiday: string | undefined;
   onClick: (day: Date) => void;
   onHover: (day: Date) => void;
@@ -97,6 +99,7 @@ const CalendarDay = memo(
     inRange,
     isStart,
     isEnd,
+    hasNote,
     holiday,
     onClick,
     onHover,
@@ -163,6 +166,19 @@ const CalendarDay = memo(
             style={{ transform: "translateZ(25px)" }}
           />
         )}
+
+        {hasNote && inMonth && (
+          <motion.span
+            className="absolute bottom-2 right-2 text-[14px] leading-none text-red-300 drop-shadow-[0_0_8px_rgba(248,113,113,0.9)]"
+            initial={{ scale: 0.8, opacity: 0.7 }}
+            animate={{ scale: [1, 1.08, 1], opacity: [0.85, 1, 0.85] }}
+            transition={{ duration: 1.4, repeat: Infinity }}
+            style={{ transform: "translateZ(24px)" }}
+            title="Note attached"
+          >
+            🎯
+          </motion.span>
+        )}
       </motion.button>
     );
   },
@@ -174,6 +190,7 @@ const CalendarDay = memo(
       prev.inRange === next.inRange &&
       prev.isStart === next.isStart &&
       prev.isEnd === next.isEnd &&
+      prev.hasNote === next.hasNote &&
       prev.holiday === next.holiday
     );
   },
@@ -185,6 +202,7 @@ export function CalendarGrid({
   currentDate,
   rangeStart,
   rangeEnd,
+  notedDateKeys,
   direction,
   onDayClick,
   onDayHover,
@@ -228,6 +246,7 @@ export function CalendarGrid({
             const inRange = isInRange(day, rangeStart, rangeEnd);
             const isStart = isRangeStart(day, rangeStart, rangeEnd);
             const isEnd = isRangeEnd(day, rangeStart, rangeEnd);
+            const hasNote = notedDateKeys.has(format(day, "yyyy-MM-dd"));
             const holiday = getHoliday(day);
             const isTarget =
               isStart || (rangeStart && isSameDay(day, rangeStart));
@@ -241,6 +260,7 @@ export function CalendarGrid({
                 inRange={inRange}
                 isStart={isStart}
                 isEnd={isEnd}
+                hasNote={hasNote}
                 holiday={holiday}
                 onClick={onDayClick}
                 onHover={onDayHover}

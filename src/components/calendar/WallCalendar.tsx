@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Calendar as CalendarIcon, Grid3X3 } from "lucide-react";
 import { useRef, useState, useEffect } from "react";
+import { format } from "date-fns";
 
 export function WallCalendar() {
   const {
@@ -40,6 +41,31 @@ export function WallCalendar() {
   const selectedDayRef = useRef<HTMLButtonElement>(null);
 
   const isMonthly = view === "month";
+
+  const notedDateKeys = new Set(
+    notes.flatMap((note) => {
+      if (note.dateKeys && note.dateKeys.length > 0) {
+        return note.dateKeys;
+      }
+
+      // Backward compatibility for old notes saved before dateKeys existed.
+      if (note.rangeLabel === "General") return [];
+
+      const dayMatches = note.rangeLabel.match(/\d+/g);
+      if (!dayMatches || dayMatches.length === 0) return [];
+
+      return dayMatches.map((d) =>
+        format(
+          new Date(
+            currentDate.getFullYear(),
+            currentDate.getMonth(),
+            Number(d),
+          ),
+          "yyyy-MM-dd",
+        ),
+      );
+    }),
+  );
 
   const handleAddNote = (text: string) => {
     addNote(text);
@@ -173,6 +199,7 @@ export function WallCalendar() {
                     currentDate={currentDate}
                     rangeStart={rangeStart}
                     rangeEnd={rangeEnd}
+                    notedDateKeys={notedDateKeys}
                     direction={direction}
                     onDayClick={handleDayClick}
                     onDayHover={handleDayHover}
